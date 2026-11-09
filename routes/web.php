@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\CatalogFilmController;
 use App\Http\Controllers\Dashboard\FilmController;
+use App\Http\Controllers\Dashboard\SalleController;
 use App\Http\Controllers\Dashboard\UserController;
 use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('films/{film}', [FilmController::class, 'destroy'])->name('dashboard.films.destroy');
         Route::patch('films/{film}/publish', [FilmController::class, 'publish'])->name('dashboard.films.publish');
         Route::patch('films/{film}/unpublish', [FilmController::class, 'unpublish'])->name('dashboard.films.unpublish');
+
+        Route::get('salles', [SalleController::class, 'index'])->name('dashboard.salles.index');
+        Route::post('salles', [SalleController::class, 'store'])->name('dashboard.salles.store');
+        Route::put('salles/{salle}', [SalleController::class, 'update'])->name('dashboard.salles.update');
+        Route::delete('salles/{salle}', [SalleController::class, 'destroy'])->name('dashboard.salles.destroy');
+        Route::patch('salles/{salle}/activate', [SalleController::class, 'activate'])->name('dashboard.salles.activate');
+        Route::patch('salles/{salle}/deactivate', [SalleController::class, 'deactivate'])->name('dashboard.salles.deactivate');
     });
 });
 
