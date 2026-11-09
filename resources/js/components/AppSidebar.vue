@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, LayoutGrid, Users } from '@lucide/vue';
+import { Clapperboard, LayoutGrid, Users } from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -16,6 +16,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as filmsIndex } from '@/routes/dashboard/films';
 import { index as usersIndex } from '@/routes/dashboard/users';
 import type { NavItem } from '@/types';
 
@@ -36,11 +37,18 @@ const mainNavItems = computed<NavItem[]>(() => {
     ];
 
     if (isAdmin.value) {
-        items.push({
-            title: 'Utilisateurs',
-            href: usersIndex(),
-            icon: Users,
-        });
+        items.push(
+            {
+                title: 'Gestion des films',
+                href: filmsIndex(),
+                icon: Clapperboard,
+            },
+            {
+                title: 'Utilisateurs',
+                href: usersIndex(),
+                icon: Users,
+            },
+        );
     }
 
     return items;

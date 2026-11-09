@@ -4,12 +4,12 @@ import { CircleUser, Ticket, User } from '@lucide/vue';
 import { computed } from 'vue';
 import SiteContainer from '@/components/SiteContainer.vue';
 import { Button } from '@/components/ui/button';
-import { dashboard, home, login } from '@/routes';
+import { dashboard, film, home, login } from '@/routes';
 
 const auth = computed(() => usePage().props.auth);
 
 const navLinks = [
-    { label: 'Films', href: '#' },
+    { label: 'Films', href: film().url },
     { label: 'Horaires', href: '#' },
     { label: 'Salles', href: '#' },
 ];
@@ -17,7 +17,7 @@ const navLinks = [
 
 <template>
     <header
-        class="w-full border-b border-[#19140035] bg-[#FDFDFC]/95 backdrop-blur-sm dark:border-[#3E3E3A] dark:bg-[#0a0a0a]/95 fixed"
+        class="fixed inset-x-0 top-0 z-50 w-full border-b border-[#19140035] bg-[#FDFDFC]/95 backdrop-blur-sm dark:border-[#3E3E3A] dark:bg-[#0a0a0a]/95"
     >
         <SiteContainer class="flex h-14 items-center justify-between gap-4">
             <Link

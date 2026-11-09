@@ -282,9 +282,11 @@ const editFormRoles = computed(() => {
         <div
             class="overflow-hidden rounded-xl border border-sidebar-border/70 dark:border-sidebar-border"
         >
-            <div class="overflow-x-auto">
+            <div class="max-h-[min(70vh,42rem)] overflow-auto">
                 <table class="w-full min-w-[720px] text-left text-sm">
-                    <thead class="border-b bg-muted/40 text-muted-foreground">
+                    <thead
+                        class="sticky top-0 z-10 border-b bg-muted/95 text-muted-foreground shadow-sm backdrop-blur-sm [&_th]:bg-muted/95"
+                    >
                         <tr>
                             <th class="px-4 py-3 font-medium">
                                 <button
@@ -454,7 +456,7 @@ const editFormRoles = computed(() => {
                 </DialogHeader>
 
                 <div class="grid gap-2">
-                    <Label for="create-name">Nom</Label>
+                    <Label for="create-name">Nom complet</Label>
                     <Input
                         id="create-name"
                         name="name"
