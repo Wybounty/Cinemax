@@ -45,6 +45,8 @@ type ManagedSeance = {
     salle_id: number;
     salle_name: string;
     salle_capacity: number;
+    confirmed_seats: number;
+    pending_seats: number;
     reserved_seats: number;
     remaining_seats: number;
     date: string;

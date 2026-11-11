@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Support\SeanceSeatAvailability;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 /**
@@ -77,6 +79,19 @@ class Seance extends Model
         return $this->belongsTo(Salle::class);
     }
 
+    /**
+     * @return HasMany<Reservation, $this>
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
+    public function seatAvailability(): SeanceSeatAvailability
+    {
+        return SeanceSeatAvailability::for($this);
+    }
+
     public function isCancelled(): bool
     {
         return $this->status === self::STATUS_CANCELLED;
@@ -114,22 +129,24 @@ class Seance extends Model
         return $this->salle?->capacity ?? 0;
     }
 
+    public function confirmedSeatsCount(): int
+    {
+        return $this->seatAvailability()->confirmedSeats();
+    }
+
+    public function pendingSeatsCount(): int
+    {
+        return $this->seatAvailability()->pendingSeats();
+    }
+
     public function reservedSeatsCount(): int
     {
-        if (! class_exists('App\Models\Reservation')) {
-            return 0;
-        }
-
-        if (! method_exists($this, 'reservations')) {
-            return 0;
-        }
-
-        return (int) $this->reservations()->sum('quantity');
+        return $this->seatAvailability()->occupyingSeats();
     }
 
     public function remainingSeatsCount(): int
     {
-        return max(0, $this->totalSeats() - $this->reservedSeatsCount());
+        return $this->seatAvailability()->remainingSeats();
     }
 
     public function hasReservations(): bool

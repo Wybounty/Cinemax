@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
@@ -124,13 +125,17 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
         return in_array($this->role?->slug, Role::privilegedSlugs(), true);
     }
 
+    /**
+     * @return HasMany<Reservation, $this>
+     */
+    public function reservations(): HasMany
+    {
+        return $this->hasMany(Reservation::class);
+    }
+
     public function hasReservations(): bool
     {
-        if (! class_exists('App\Models\Reservation')) {
-            return false;
-        }
-
-        return $this->hasMany('App\Models\Reservation')->exists();
+        return $this->reservations()->exists();
     }
 
     public static function countActiveWithRoleSlug(string $slug): int

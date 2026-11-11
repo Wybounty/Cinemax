@@ -73,18 +73,8 @@ class Film extends Model
 
     public function hasActiveReservations(): bool
     {
-        if (! class_exists('App\Models\Reservation')) {
-            return false;
-        }
-
-        $seance = new Seance;
-
-        if (! method_exists($seance, 'reservations')) {
-            return false;
-        }
-
         return $this->seances()
-            ->whereHas('reservations')
+            ->whereHas('reservations', fn ($query) => $query->occupyingSeats())
             ->exists();
     }
 }

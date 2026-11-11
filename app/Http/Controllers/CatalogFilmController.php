@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Dashboard\MarkCompletedSeances;
+use App\Actions\Reservations\ExpirePendingReservations;
 use App\Data\CatalogFilmDetail;
 use App\Data\CatalogFilmListItem;
 use App\Data\CatalogSeanceListItem;
@@ -30,12 +31,14 @@ class CatalogFilmController extends Controller
         Film $film,
         FilmPosterStorage $posters,
         MarkCompletedSeances $markCompletedSeances,
+        ExpirePendingReservations $expirePendingReservations,
     ): Response {
         if (! $film->published || $film->trashed()) {
             abort(404);
         }
 
         $markCompletedSeances();
+        $expirePendingReservations();
 
         $film->load(['genres' => fn ($query) => $query->orderBy('name')]);
 

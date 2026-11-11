@@ -4,7 +4,9 @@ import {
     CalendarClock,
     Clapperboard,
     LayoutGrid,
+    Ticket,
     Theater,
+    TicketCheck,
     Users,
 } from '@lucide/vue';
 import { computed } from 'vue';
@@ -23,6 +25,8 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as filmsIndex } from '@/routes/dashboard/films';
+import { index as myReservationsIndex } from '@/routes/dashboard/my-reservations';
+import { index as reservationsIndex } from '@/routes/dashboard/reservations';
 import { index as seancesIndex } from '@/routes/dashboard/seances';
 import { index as sallesIndex } from '@/routes/dashboard/salles';
 import { index as usersIndex } from '@/routes/dashboard/users';
@@ -42,6 +46,11 @@ const mainNavItems = computed<NavItem[]>(() => {
             href: dashboard(),
             icon: LayoutGrid,
         },
+        {
+            title: 'Mes réservations',
+            href: myReservationsIndex(),
+            icon: TicketCheck,
+        },
     ];
 
     if (isAdmin.value) {
@@ -55,6 +64,11 @@ const mainNavItems = computed<NavItem[]>(() => {
                 title: 'Gestion des séances',
                 href: seancesIndex(),
                 icon: CalendarClock,
+            },
+            {
+                title: 'Gestion des réservations',
+                href: reservationsIndex(),
+                icon: Ticket,
             },
             {
                 title: 'Gestion des salles',

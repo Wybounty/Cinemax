@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import {
     ArrowLeft,
     Calendar,
@@ -10,11 +10,16 @@ import {
     Plus,
     Ticket,
 } from '@lucide/vue';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import ReservationController from '@/actions/App/Http/Controllers/ReservationController';
+import InputError from '@/components/InputError.vue';
 import SiteContainer from '@/components/SiteContainer.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
 import { film as filmsIndex } from '@/routes';
 
 type Genre = {
@@ -44,6 +49,8 @@ type CatalogSeance = {
     time_range: string;
     salle_name: string;
     salle_capacity: number;
+    confirmed_seats: number;
+    pending_seats: number;
     reserved_seats: number;
     remaining_seats: number;
     is_sold_out: boolean;
@@ -58,18 +65,58 @@ const props = defineProps<{
     seances: CatalogSeance[];
 }>();
 
+const page = usePage();
+const isAuthenticated = computed(() => Boolean(page.props.auth.user));
+const authUser = computed(
+    () =>
+        page.props.auth.user as {
+            name: string;
+            email: string;
+        } | null,
+);
+const reserveErrors = computed(() => page.props.errors);
+
+const contactName = ref('');
+const contactEmail = ref('');
+
+watch(
+    authUser,
+    (user) => {
+        if (user && !contactName.value && !contactEmail.value) {
+            contactName.value = user.name;
+            contactEmail.value = user.email;
+        }
+    },
+    { immediate: true },
+);
+
 const selectedSeanceId = ref<number | null>(
     props.seances.find((seance) => !seance.is_sold_out)?.id ??
         props.seances[0]?.id ??
         null,
 );
+
+watch(
+    () => props.seances,
+    (seances) => {
+        localSeances.value = seances;
+        if (
+            selectedSeanceId.value &&
+            !seances.some((item) => item.id === selectedSeanceId.value)
+        ) {
+            selectedSeanceId.value =
+                seances.find((s) => !s.is_sold_out)?.id ?? seances[0]?.id ?? null;
+        }
+    },
+);
 const quantity = ref(1);
-const reservationNotice = ref<string | null>(null);
+const reserving = ref(false);
+const localSeances = ref(props.seances);
 
 const seancesByDate = computed(() => {
     const groups = new Map<string, CatalogSeance[]>();
 
-    for (const seance of props.seances) {
+    for (const seance of localSeances.value) {
         const items = groups.get(seance.date) ?? [];
         items.push(seance);
         groups.set(seance.date, items);
@@ -83,7 +130,7 @@ const seancesByDate = computed(() => {
 });
 
 const selectedSeance = computed(
-    () => props.seances.find((s) => s.id === selectedSeanceId.value) ?? null,
+    () => localSeances.value.find((s) => s.id === selectedSeanceId.value) ?? null,
 );
 
 const unitPrice = computed(() => {
@@ -108,7 +155,6 @@ const maxSelectableQuantity = computed(
 function selectSeance(seance: CatalogSeance): void {
     selectedSeanceId.value = seance.id;
     quantity.value = seance.remaining_seats > 0 ? 1 : 0;
-    reservationNotice.value = null;
 }
 
 function decrementQuantity(): void {
@@ -124,9 +170,82 @@ function incrementQuantity(): void {
 }
 
 function onReserve(): void {
-    reservationNotice.value =
-        'La réservation en ligne arrive bientôt. Merci de votre patience !';
+    if (!selectedSeance.value || quantity.value < 1) {
+        return;
+    }
+
+    const name = contactName.value.trim();
+    const email = contactEmail.value.trim();
+
+    if (!isAuthenticated.value && (!name || !email)) {
+        return;
+    }
+
+    reserving.value = true;
+
+    router.post(
+        ReservationController.store.url(),
+        {
+            seance_id: selectedSeance.value.id,
+            quantity: quantity.value,
+            contact_name:
+                name ||
+                authUser.value?.name ||
+                undefined,
+            contact_email:
+                email ||
+                authUser.value?.email ||
+                undefined,
+        },
+        {
+            preserveScroll: true,
+            onFinish: () => {
+                reserving.value = false;
+            },
+        },
+    );
 }
+
+let availabilityTimer: ReturnType<typeof setInterval> | undefined;
+
+onMounted(() => {
+    try {
+        const raw = sessionStorage.getItem('cinemax_pending_contact');
+
+        if (raw) {
+            const parsed = JSON.parse(raw) as {
+                name?: string;
+                email?: string;
+            };
+
+            if (parsed.name) {
+                contactName.value = parsed.name;
+            }
+
+            if (parsed.email) {
+                contactEmail.value = parsed.email;
+            }
+
+            sessionStorage.removeItem('cinemax_pending_contact');
+        }
+    } catch {
+        sessionStorage.removeItem('cinemax_pending_contact');
+    }
+
+    availabilityTimer = setInterval(() => {
+        router.reload({ only: ['seances'], preserveScroll: true });
+    }, 30_000);
+});
+
+onUnmounted(() => {
+    clearInterval(availabilityTimer);
+});
+
+watch(maxSelectableQuantity, (max) => {
+    if (quantity.value > max) {
+        quantity.value = Math.max(max > 0 ? 1 : 0, max);
+    }
+});
 </script>
 
 <template>
@@ -319,8 +438,8 @@ function onReserve(): void {
                 >
                     <h2 class="text-xl font-semibold">Réservation</h2>
                     <p class="mt-1 text-sm text-[#1b1b18]/70 dark:text-[#EDEDEC]/70">
-                        Interface de démonstration — aucune réservation n’est
-                        enregistrée pour le moment.
+                        Connectez-vous pour bloquer vos places pendant 10
+                        minutes, puis validez le paiement simulé.
                     </p>
 
                     <div
@@ -378,11 +497,12 @@ function onReserve(): void {
                                         {{ selectedSeance.remaining_seats }}
                                         place(s) restante(s)
                                         <span
-                                            v-if="selectedSeance.reserved_seats > 0"
-                                            class="font-normal text-[#1b1b18]/60 dark:text-[#EDEDEC]/60"
+                                            class="mt-1 block font-normal text-[#1b1b18]/60 dark:text-[#EDEDEC]/60"
                                         >
-                                            ({{ selectedSeance.reserved_seats }}
-                                            déjà réservée(s))
+                                            {{ selectedSeance.confirmed_seats }}
+                                            confirmée(s) ·
+                                            {{ selectedSeance.pending_seats }}
+                                            en attente
                                         </span>
                                     </template>
                                 </p>
@@ -440,29 +560,78 @@ function onReserve(): void {
                             <p class="text-2xl font-semibold tracking-tight">
                                 {{ totalPrice }}
                             </p>
+
+                            <div
+                                v-if="!isAuthenticated"
+                                class="mt-6 space-y-3 border-t border-[#19140035] pt-5 dark:border-[#3E3E3A]"
+                            >
+                                <p class="text-sm text-[#1b1b18]/70 dark:text-[#EDEDEC]/70">
+                                    Réservez sans compte : vos billets PDF vous
+                                    seront envoyés à cette adresse après
+                                    paiement.
+                                </p>
+                                <div class="grid gap-3">
+                                    <div class="grid gap-1.5">
+                                        <Label for="reserve_contact_name"
+                                            >Nom</Label
+                                        >
+                                        <Input
+                                            id="reserve_contact_name"
+                                            v-model="contactName"
+                                            autocomplete="name"
+                                            required
+                                        />
+                                        <InputError
+                                            :message="reserveErrors.contact_name"
+                                        />
+                                    </div>
+                                    <div class="grid gap-1.5">
+                                        <Label for="reserve_contact_email"
+                                            >E-mail</Label
+                                        >
+                                        <Input
+                                            id="reserve_contact_email"
+                                            v-model="contactEmail"
+                                            type="email"
+                                            autocomplete="email"
+                                            required
+                                        />
+                                        <InputError
+                                            :message="reserveErrors.contact_email"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
                             <Button
                                 type="button"
                                 class="mt-6 w-full gap-2"
                                 :disabled="
+                                    reserving ||
                                     selectedSeance.is_sold_out ||
-                                    maxSelectableQuantity === 0
+                                    maxSelectableQuantity === 0 ||
+                                    (!isAuthenticated &&
+                                        (!contactName.trim() ||
+                                            !contactEmail.trim()))
                                 "
                                 @click="onReserve"
                             >
-                                <Ticket class="size-4" />
+                                <Spinner v-if="reserving" />
+                                <Ticket v-else class="size-4" />
                                 {{
                                     selectedSeance.is_sold_out
                                         ? 'Séance complète'
                                         : 'Réserver'
                                 }}
                             </Button>
-                            <p
-                                v-if="reservationNotice"
-                                class="mt-4 rounded-md border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100"
-                                role="status"
-                            >
-                                {{ reservationNotice }}
-                            </p>
+                            <InputError
+                                :message="reserveErrors.quantity"
+                                class="mt-3"
+                            />
+                            <InputError
+                                :message="reserveErrors.seance_id"
+                                class="mt-1"
+                            />
                         </div>
                     </div>
                 </section>

@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             SalleSeeder::class,
             SeanceSeeder::class,
             UserSeeder::class,
+            ReservationSeeder::class,
+            PaiementSeeder::class,
+            BilletSeeder::class,
         ]);
     }
 }

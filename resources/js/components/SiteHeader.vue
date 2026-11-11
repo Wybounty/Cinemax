@@ -4,6 +4,8 @@ import { CircleUser, Ticket, User } from '@lucide/vue';
 import { computed } from 'vue';
 import SiteContainer from '@/components/SiteContainer.vue';
 import { Button } from '@/components/ui/button';
+import { index as billetsIndex } from '@/routes/account/billets';
+import { index as reservationsIndex } from '@/routes/dashboard/my-reservations';
 import { dashboard, film, home, login } from '@/routes';
 
 const auth = computed(() => usePage().props.auth);
@@ -43,16 +45,26 @@ const navLinks = [
 
             <div class="flex shrink-0 items-center gap-2 sm:gap-3">
                 <Button as-child size="sm" class="hidden sm:inline-flex">
-                    <a href="#">
+                    <Link :href="film()">
                         <Ticket class="size-4" aria-hidden="true" />
-                        Prendre un ticket
-                    </a>
+                        Films à l’affiche
+                    </Link>
                 </Button>
-                <Button as-child size="icon-sm" variant="ghost" class="sm:hidden">
-                    <a href="#" aria-label="Prendre un ticket">
-                        <Ticket class="size-4" />
-                    </a>
-                </Button>
+
+                <Link
+                    v-if="auth.user"
+                    :href="reservationsIndex()"
+                    class="hidden text-sm text-[#1b1b18]/70 hover:text-[#1b1b18] dark:text-[#EDEDEC]/70 dark:hover:text-[#EDEDEC] sm:inline"
+                >
+                    Mes réservations
+                </Link>
+                <Link
+                    v-if="auth.user"
+                    :href="billetsIndex()"
+                    class="hidden text-sm text-[#1b1b18]/70 hover:text-[#1b1b18] dark:text-[#EDEDEC]/70 dark:hover:text-[#EDEDEC] sm:inline"
+                >
+                    Mes billets
+                </Link>
 
                 <Link
                     v-if="auth.user"
