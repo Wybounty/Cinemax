@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 
@@ -54,26 +55,35 @@ class Film extends Model
         $query->where('published', true);
     }
 
+    /**
+     * @return HasMany<Seance, $this>
+     */
+    public function seances(): HasMany
+    {
+        return $this->hasMany(Seance::class);
+    }
+
     public function hasUpcomingScreenings(): bool
     {
-        if (! class_exists('App\Models\Screening')) {
-            return false;
-        }
-
-        return $this->hasMany('App\Models\Screening')->exists();
+        return $this->seances()
+            ->where('status', Seance::STATUS_SCHEDULED)
+            ->where('end_at', '>', now())
+            ->exists();
     }
 
     public function hasActiveReservations(): bool
     {
-        if (! class_exists('App\Models\Screening')) {
+        if (! class_exists('App\Models\Reservation')) {
             return false;
         }
 
-        if (! method_exists('App\Models\Screening', 'reservations')) {
+        $seance = new Seance;
+
+        if (! method_exists($seance, 'reservations')) {
             return false;
         }
 
-        return $this->hasMany('App\Models\Screening')
+        return $this->seances()
             ->whereHas('reservations')
             ->exists();
     }

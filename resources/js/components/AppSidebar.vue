@@ -1,6 +1,12 @@
 <script setup lang="ts">
 import { Link, usePage } from '@inertiajs/vue3';
-import { Clapperboard, LayoutGrid, Theater, Users } from '@lucide/vue';
+import {
+    CalendarClock,
+    Clapperboard,
+    LayoutGrid,
+    Theater,
+    Users,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
@@ -17,6 +23,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as filmsIndex } from '@/routes/dashboard/films';
+import { index as seancesIndex } from '@/routes/dashboard/seances';
 import { index as sallesIndex } from '@/routes/dashboard/salles';
 import { index as usersIndex } from '@/routes/dashboard/users';
 import type { NavItem } from '@/types';
@@ -43,6 +50,11 @@ const mainNavItems = computed<NavItem[]>(() => {
                 title: 'Gestion des films',
                 href: filmsIndex(),
                 icon: Clapperboard,
+            },
+            {
+                title: 'Gestion des séances',
+                href: seancesIndex(),
+                icon: CalendarClock,
             },
             {
                 title: 'Gestion des salles',

@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { Clapperboard } from '@lucide/vue';
 import SiteContainer from '@/components/SiteContainer.vue';
 import SiteHeader from '@/components/SiteHeader.vue';
 import { Button } from '@/components/ui/button';
+import { show as filmShow } from '@/routes/film';
 
 type CatalogFilm = {
     id: number;
@@ -32,8 +33,8 @@ defineProps<{
                         À l'affiche
                     </h1>
                     <p class="mt-2 max-w-2xl text-sm text-[#1b1b18]/70 dark:text-[#EDEDEC]/70">
-                        Découvrez la programmation Grand Cinéma. Les séances
-                        seront bientôt disponibles.
+                        Découvrez la programmation Grand Cinéma et consultez
+                        les séances à venir pour chaque film.
                     </p>
                 </header>
 
@@ -45,29 +46,42 @@ defineProps<{
                         :key="film.id"
                         class="group flex flex-col"
                     >
-                        <div
-                            class="relative mb-4 aspect-[2/3] overflow-hidden rounded-xl border border-[#19140035] bg-[#19140008] shadow-sm dark:border-[#3E3E3A] dark:bg-[#141414]"
+                        <Link
+                            :href="filmShow({ film: film.id })"
+                            class="flex flex-col outline-none focus-visible:ring-2 focus-visible:ring-[#1b1b18]/30 dark:focus-visible:ring-[#EDEDEC]/40"
                         >
-                            <img
-                                v-if="film.poster_url"
-                                :src="film.poster_url"
-                                :alt="`Affiche de ${film.title}`"
-                                class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
-                            />
                             <div
-                                v-else
-                                class="flex size-full items-center justify-center"
+                                class="relative mb-4 aspect-[2/3] overflow-hidden rounded-xl border border-[#19140035] bg-[#19140008] shadow-sm dark:border-[#3E3E3A] dark:bg-[#141414]"
                             >
-                                <Clapperboard
-                                    class="size-12 text-[#1b1b18]/30 dark:text-[#EDEDEC]/30"
+                                <img
+                                    v-if="film.poster_url"
+                                    :src="film.poster_url"
+                                    :alt="`Affiche de ${film.title}`"
+                                    class="size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                                 />
+                                <div
+                                    v-else
+                                    class="flex size-full items-center justify-center"
+                                >
+                                    <Clapperboard
+                                        class="size-12 text-[#1b1b18]/30 dark:text-[#EDEDEC]/30"
+                                    />
+                                </div>
                             </div>
-                        </div>
-                        <h2 class="text-lg font-medium leading-snug">
-                            {{ film.title }}
-                        </h2>
-                        <Button as-child class="mt-4 w-full" variant="outline">
-                            <a href="#">Voir les séances</a>
+                            <h2
+                                class="text-lg font-medium leading-snug transition-colors group-hover:text-[#1b1b18] dark:group-hover:text-white"
+                            >
+                                {{ film.title }}
+                            </h2>
+                        </Link>
+                        <Button
+                            as-child
+                            class="mt-4 w-full"
+                            variant="outline"
+                        >
+                            <Link :href="filmShow({ film: film.id })">
+                                Voir les séances
+                            </Link>
                         </Button>
                     </li>
                 </ul>

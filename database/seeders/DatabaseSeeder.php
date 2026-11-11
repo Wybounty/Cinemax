@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             GenreSeeder::class,
             FilmSeeder::class,
             SalleSeeder::class,
+            SeanceSeeder::class,
             UserSeeder::class,
         ]);
     }
